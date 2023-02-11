@@ -75,19 +75,18 @@ api = API(app_name, client_id, client_secret, token_update_callback=token_file_s
 #         stud_poster = stud_poster.content
 #     cursor.execute(f"insert into \"Studio\" (shiki_id, name, real, image) values(?,?,?,?)", item['id'], item['name'], item['real'], stud_poster)
 
-# # genres = api._send_request("GET",f"/genres")
-# # for item in genres:
-# #     if item['kind'] == 'manga':
-# #         continue
-# #     cursor.execute(f"insert into \"Genre\" (shiki_id, name_eng, name_rus) values(?,?,?)", item['id'], item['name'], item['russian'])
+# genres = api._send_request("GET",f"/genres")
+# for item in genres:
+#     if item['kind'] == 'manga':
+#         continue
+#     cursor.execute(f"insert into \"Genre\" (shiki_id, name_eng, name_rus) values(?,?,?)", item['id'], item['name'], item['russian'])
 
 # connection.commit()
 
 
-i=1
+i=8000
 while True:
     ong = 0
-    time.sleep(0.125)
     next_ep = ""
     
     try:
@@ -99,6 +98,7 @@ while True:
 
 
         anime = api._send_request("GET", f"/animes/{i}")
+        
 
         cursor.execute("SELECT * FROM \"Franchize\"")
         for row in cursor.fetchall():
@@ -139,7 +139,7 @@ while True:
         
 
 
-        cursor.execute(f"insert into \"Anime\" (name_eng,name_rus, score_shiki, description, ongoing, next_episode_at,shiki_id,released_on, franchize_id, type_id) values(?, ? ,?,?,?,?,?,?,?,?)",anime['name'],anime['russian'],float(anime['score']), anime['description'], anime['ongoing'],getDatetime(anime['next_episode_at']),anime['id'],get_release(anime['released_on']), selected_fr_id, selected_tp_id)
+        cursor.execute(f"insert into \"Anime\" (name_eng,name_rus, score_shiki, description, ongoing, next_episode_at,shiki_id,released_on, franchize_id, type_id, episodes) values(?, ? ,?,?,?,?,?,?,?,?,?)",anime['name'],anime['russian'],float(anime['score']), anime['description'], anime['ongoing'],getDatetime(anime['next_episode_at']),anime['id'],getDatetime(anime['released_on']), selected_fr_id, selected_tp_id, anime['episodes'])
 
        
         resp_orig = requests.get(f"{conn_str}{anime['image']['original']}")
@@ -162,7 +162,8 @@ while True:
         
     except Exception as e:
         print(f'{i}   {e}')
-        if("429" in str(e)):
+        if("Too Many Requests" in str(e)):
+            time.sleep(5)
             continue
         i=i+1
         continue
